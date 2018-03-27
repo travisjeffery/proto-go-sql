@@ -41,7 +41,7 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 	}
 	msgs := p.msgs(file)
 	if len(msgs.JSON) > 0 {
-		p.PrintImport("json", "json")
+		p.PrintImport("json", "encoding/json")
 	}
 	if len(msgs.GoGoProto) > 0 {
 		p.PrintImport("gogoproto", "github.com/gogo/protobuf/proto")
