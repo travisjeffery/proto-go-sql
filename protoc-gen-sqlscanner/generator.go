@@ -2,13 +2,14 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"os"
+	"reflect"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gogo/protobuf/proto"
-	google_protobuf "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	sqlscanner "github.com/travisjeffery/sqlscannerpb"
 )
 
 type Generator struct {
@@ -33,8 +34,67 @@ func (p *Generator) Init(g *generator.Generator) {
 	p.Generator = g
 }
 
+func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
+	if len(file.Messages()) == 0 {
+		return
+	}
+	msgs := p.msgs(file)
+	if len(msgs.JSONMsgs) > 0 {
+		p.PrintImport("json", "json")
+	}
+	if len(msgs.GoProtoMsgs) > 0 {
+		p.PrintImport("goproto", "github.com/golang/protobuf/proto")
+	}
+	if len(msgs.GoGoProtoMsgs) > 0 {
+		p.PrintImport("gogoproto", "github.com/gogo/protobuf/proto")
+	}
+}
+
+func (p *Generator) Generate(file *generator.FileDescriptor) {
+	t := template.Must(template.New("sqlscanner").Parse(tmpl))
+	var buf bytes.Buffer
+	t.Execute(&buf, p.msgs(file))
+	p.P(buf.String())
+}
+
+func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
+	var msgs Msgs
+	for _, msg := range file.Messages() {
+		if reflect.ValueOf(msg.DescriptorProto.Options).IsNil() {
+			continue
+		}
+		v, err := proto.GetExtension(msg.DescriptorProto.Options, Ext)
+		if err != nil || !p.overwrite {
+			continue
+		}
+		ext := v.(*string)
+		switch *ext {
+		case "json":
+			msgs.JSONMsgs = append(msgs.JSONMsgs, msg)
+		case "protobuf":
+			msgs.GoProtoMsgs = append(msgs.GoProtoMsgs, msg)
+		case "gogoprotobuf":
+			msgs.GoGoProtoMsgs = append(msgs.GoGoProtoMsgs, msg)
+		default:
+			fmt.Fprintf(os.Stderr, "Unsupported marshal type: %s", *ext)
+		}
+	}
+	return msgs
+}
+
+func init() {
+	proto.RegisterExtension(sqlscanner.E_Sqlscanner)
+	generator.RegisterPlugin(NewGenerator())
+}
+
+type Msgs struct {
+	JSONMsgs      []*generator.Descriptor
+	GoProtoMsgs   []*generator.Descriptor
+	GoGoProtoMsgs []*generator.Descriptor
+}
+
 var tmpl = `
-{{ range $message := . }}
+{{ range $message := .JSONMsgs }}
 func (t *{{ $message.Name }}) Scan(val interface{}) error {
 	return json.Unmarshal(val.([]byte), t)
 }
@@ -43,40 +103,24 @@ func (t *{{ $message.Name }}) Value() (driver.Value, error) {
 	return json.Marshal(t)
 }
 {{ end }}
+
+{{ range $message := .GoProtoMsgs }}
+func (t *{{ $message.Name }}) Scan(val interface{}) error {
+	return goproto.Unmarshal(val.([]byte), t)
+}
+
+func (t *{{ $message.Name }}) Value() (driver.Value, error) {
+	return goproto.Marshal(t)
+}
+{{ end }}
+
+{{ range $message := .GoGoProtoMsgs }}
+func (t *{{ $message.Name }}) Scan(val interface{}) error {
+	return gogoproto.Unmarshal(val.([]byte), t)
+}
+
+func (t *{{ $message.Name }}) Value() (driver.Value, error) {
+	return gogoproto.Marshal(t)
+}
+{{ end }}
 `
-
-func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
-	if len(file.FileDescriptorProto.Service) == 0 {
-		return
-	}
-	p.P()
-}
-
-func (p *Generator) Generate(file *generator.FileDescriptor) {
-	var messages []*generator.Descriptor
-	for _, message := range file.Messages() {
-		if !p.overwrite && proto.GetBoolExtension(message.Options, Extension, false) {
-			continue
-		}
-		messages = append(messages, message)
-	}
-	t := template.Must(template.New("sqlscanner").Parse(tmpl))
-	var buf bytes.Buffer
-	t.Execute(&buf, messages)
-	spew.Fdump(os.Stderr, "buf:", buf.String())
-	p.P(buf.String())
-}
-
-var Extension = &proto.ExtensionDesc{
-	ExtendedType:  (*google_protobuf.EnumOptions)(nil),
-	ExtensionType: (*string)(nil),
-	Field:         90000,
-	Name:          "sqlscanner",
-	Tag:           "varint,90000,opt,name=sqlscanner",
-	Filename:      "generator.go",
-}
-
-func init() {
-	proto.RegisterExtension(Extension)
-	generator.RegisterPlugin(NewGenerator())
-}
