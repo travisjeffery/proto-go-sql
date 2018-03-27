@@ -9,7 +9,7 @@ func main() {
 	p := NewGenerator()
 	p.Overwrite()
 	resp := command.GeneratePlugin(req, p, "_sqlscanner.go")
-	if p.HasMsgs() {
+	if p.Write() {
 		command.Write(resp)
 	}
 }
