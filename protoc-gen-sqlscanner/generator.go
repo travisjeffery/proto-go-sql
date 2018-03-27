@@ -39,10 +39,10 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 		return
 	}
 	msgs := p.msgs(file)
-	if len(msgs.JSONMsgs) > 0 {
+	if len(msgs.JSON) > 0 {
 		p.PrintImport("json", "json")
 	}
-	if len(msgs.GoGoProtoMsgs) > 0 {
+	if len(msgs.GoGoProto) > 0 {
 		p.PrintImport("gogoproto", "github.com/gogo/protobuf/proto")
 	}
 }
@@ -67,9 +67,9 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 		ext := v.(*string)
 		switch *ext {
 		case "json":
-			msgs.JSONMsgs = append(msgs.JSONMsgs, msg)
+			msgs.JSON = append(msgs.JSON, msg)
 		case "gogoprotobuf":
-			msgs.GoGoProtoMsgs = append(msgs.GoGoProtoMsgs, msg)
+			msgs.GoGoProto = append(msgs.GoGoProto, msg)
 		default:
 			fmt.Fprintf(os.Stderr, "Unsupported marshal type: %s", *ext)
 		}
@@ -83,12 +83,12 @@ func init() {
 }
 
 type Msgs struct {
-	JSONMsgs      []*generator.Descriptor
-	GoGoProtoMsgs []*generator.Descriptor
+	JSON      []*generator.Descriptor
+	GoGoProto []*generator.Descriptor
 }
 
 var tmpl = `
-{{ range $message := .JSONMsgs }}
+{{ range $message := .JSON }}
 func (t *{{ $message.Name }}) Scan(val interface{}) error {
 	return json.Unmarshal(val.([]byte), t)
 }
@@ -98,7 +98,7 @@ func (t *{{ $message.Name }}) Value() (driver.Value, error) {
 }
 {{ end }}
 
-{{ range $message := .GoGoProtoMsgs }}
+{{ range $message := .GoGoProto }}
 func (t *{{ $message.Name }}) Scan(val interface{}) error {
 	return gogoproto.Unmarshal(val.([]byte), t)
 }
