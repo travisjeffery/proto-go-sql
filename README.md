@@ -1,10 +1,10 @@
 # proto-go-sql
 
-Generate sql.Scanner and sql.Valuer implementations for your Protobufs.
+Generate sql.Scanner and driver.Valuer implementations for your Protobufs.
 
 ## Example
 
-We want the generated struct for this Person message to implement sql.Scanner and sql.Valuer so we can easily write and read it as JSON from Postgres.
+We want the generated struct for this Person message to implement sql.Scanner and driver.Valuer so we can easily write and read it as JSON from Postgres.
 
 So we compile the person.proto file:
 
