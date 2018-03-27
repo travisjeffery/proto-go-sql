@@ -4,8 +4,15 @@ Generate sql.Scanner and sql.Valuer implementations for your Protobufs.
 
 ## Example
 
+We want the generated struct for this Person message to implement sql.Scanner and sql.Valuer so we can easily write and read it as JSON from Postgres.
+
+So we compile the person.proto file:
+
 ``` proto
-# person.proto
+syntax = "proto3";
+
+import "github.com/travisjeffery/proto-go-sql/sql.proto";
+
 message Person {
   option (sql.all) = "json";
 
@@ -13,7 +20,13 @@ message Person {
 }
 ```
 
-Generates this person_sql.go:
+And run:
+
+``` sh
+$ protoc --sql_out=. person.proto
+```
+
+Generating this person_sql.go:
 
 ``` go
 func (t *Person) Scan(val interface{}) error {
@@ -25,6 +38,8 @@ func (t *Person) Value() (driver.Value, error) {
 }
 
 ```
+
+And we're done!
 
 ## License
 
