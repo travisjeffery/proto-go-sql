@@ -85,7 +85,6 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 }
 
 func init() {
-	proto.RegisterExtension(sqlscanner.E_Sqlscanner)
 	generator.RegisterPlugin(NewGenerator())
 }
 
