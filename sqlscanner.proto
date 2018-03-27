@@ -3,5 +3,5 @@ syntax = "proto3";
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.MessageOptions {
-  bool sqlscanner = 90000;
+  string sqlscanner = 90000;
 }
