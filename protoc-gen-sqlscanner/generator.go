@@ -16,6 +16,7 @@ type Generator struct {
 	*generator.Generator
 	generator.PluginImports
 	overwrite bool
+	hasMsgs   bool
 }
 
 func NewGenerator() *Generator {
@@ -28,6 +29,10 @@ func (p *Generator) Name() string {
 
 func (p *Generator) Overwrite() {
 	p.overwrite = true
+}
+
+func (p *Generator) HasMsgs() bool {
+	return p.hasMsgs
 }
 
 func (p *Generator) Init(g *generator.Generator) {
@@ -67,8 +72,10 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 		ext := v.(*string)
 		switch *ext {
 		case "json":
+			p.hasMsgs = true
 			msgs.JSON = append(msgs.JSON, msg)
 		case "gogoprotobuf":
+			p.hasMsgs = true
 			msgs.GoGoProto = append(msgs.GoGoProto, msg)
 		default:
 			fmt.Fprintf(os.Stderr, "Unsupported marshal type: %s", *ext)
