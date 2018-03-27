@@ -5,5 +5,5 @@ package sqlscanner;
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.MessageOptions {
-  string sqlscanner = 90000;
+  string sqlscanner = 90001;
 }

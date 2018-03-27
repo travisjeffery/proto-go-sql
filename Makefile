@@ -1,2 +1,2 @@
 compile:
-	protoc --gogo_out=. *.proto
+	protoc --gogo_out=sqlscanner *.proto

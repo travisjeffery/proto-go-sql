@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	sqlscanner "github.com/travisjeffery/sqlscannerpb"
+	sqlscanner "github.com/travisjeffery/sqlscannerpb/sqlscanner"
 )
 
 type Generator struct {
