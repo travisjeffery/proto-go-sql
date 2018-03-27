@@ -60,7 +60,7 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 		if reflect.ValueOf(msg.DescriptorProto.Options).IsNil() {
 			continue
 		}
-		v, err := proto.GetExtension(msg.DescriptorProto.Options, Ext)
+		v, err := proto.GetExtension(msg.DescriptorProto.Options, sqlscanner.E_Sqlscanner)
 		if err != nil || !p.overwrite {
 			continue
 		}
