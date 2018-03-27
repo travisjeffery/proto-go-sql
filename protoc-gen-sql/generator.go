@@ -78,7 +78,7 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 		child.Name = &name
 
 		if !reflect.ValueOf(child.Options).IsNil() {
-			v, err := proto.GetExtension(child.Options, sql.E_Sql)
+			v, err := proto.GetExtension(child.Options, sql.E_All)
 			if err == nil {
 				ext := v.(*string)
 

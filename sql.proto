@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package sqlscanner;
+package sql;
 
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.MessageOptions {
-  string sqlscanner = 90001;
+  string all = 90001;
 }
