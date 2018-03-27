@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	sqlscanner "github.com/travisjeffery/sqlscannerpb/sqlscanner"
 )
@@ -15,8 +16,7 @@ import (
 type Generator struct {
 	*generator.Generator
 	generator.PluginImports
-	overwrite bool
-	write     bool
+	write bool
 }
 
 func NewGenerator() *Generator {
@@ -25,10 +25,6 @@ func NewGenerator() *Generator {
 
 func (p *Generator) Name() string {
 	return "sqlscanner"
-}
-
-func (p *Generator) Overwrite() {
-	p.overwrite = true
 }
 
 func (p *Generator) Write() bool {
@@ -53,34 +49,53 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (p *Generator) Generate(file *generator.FileDescriptor) {
+	p.write = false
 	t := template.Must(template.New("sqlscanner").Parse(tmpl))
 	var buf bytes.Buffer
 	t.Execute(&buf, p.msgs(file))
 	p.P(buf.String())
 }
 
+func forEachMessage(parent *descriptor.DescriptorProto, children []*descriptor.DescriptorProto, f func(parent *descriptor.DescriptorProto, child *descriptor.DescriptorProto)) {
+	for _, child := range children {
+		f(parent, child)
+		forEachMessage(child, child.NestedType, f)
+	}
+}
+
 func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 	var msgs Msgs
-	for _, msg := range file.Messages() {
-		if reflect.ValueOf(msg.DescriptorProto.Options).IsNil() {
-			continue
+
+	forEachMessage(nil, file.MessageType, func(parent *descriptor.DescriptorProto, child *descriptor.DescriptorProto) {
+		var name string
+		if parent != nil {
+			parentName := generator.CamelCase(*parent.Name)
+			childName := generator.CamelCase(*child.Name)
+			name = fmt.Sprintf("%s_%s", parentName, childName)
+		} else {
+			name = generator.CamelCase(*child.Name)
 		}
-		v, err := proto.GetExtension(msg.DescriptorProto.Options, sqlscanner.E_Sqlscanner)
-		if err != nil || !p.overwrite {
-			continue
+		child.Name = &name
+
+		if !reflect.ValueOf(child.Options).IsNil() {
+			v, err := proto.GetExtension(child.Options, sqlscanner.E_Sqlscanner)
+			if err == nil {
+				ext := v.(*string)
+
+				switch *ext {
+				case "json":
+					p.write = true
+					msgs.JSON = append(msgs.JSON, child)
+				case "gogoprotobuf":
+					p.write = true
+					msgs.GoGoProto = append(msgs.GoGoProto, child)
+				default:
+					fmt.Fprintf(os.Stderr, "Unsupported marshal type: %s", *ext)
+				}
+			}
 		}
-		ext := v.(*string)
-		switch *ext {
-		case "json":
-			p.write = true
-			msgs.JSON = append(msgs.JSON, msg)
-		case "gogoprotobuf":
-			p.write = true
-			msgs.GoGoProto = append(msgs.GoGoProto, msg)
-		default:
-			fmt.Fprintf(os.Stderr, "Unsupported marshal type: %s", *ext)
-		}
-	}
+	})
+
 	return msgs
 }
 
@@ -89,8 +104,8 @@ func init() {
 }
 
 type Msgs struct {
-	JSON      []*generator.Descriptor
-	GoGoProto []*generator.Descriptor
+	JSON      []*descriptor.DescriptorProto
+	GoGoProto []*descriptor.DescriptorProto
 }
 
 var tmpl = `
