@@ -42,9 +42,6 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 	if len(msgs.JSONMsgs) > 0 {
 		p.PrintImport("json", "json")
 	}
-	if len(msgs.GoProtoMsgs) > 0 {
-		p.PrintImport("goproto", "github.com/golang/protobuf/proto")
-	}
 	if len(msgs.GoGoProtoMsgs) > 0 {
 		p.PrintImport("gogoproto", "github.com/gogo/protobuf/proto")
 	}
@@ -71,8 +68,6 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 		switch *ext {
 		case "json":
 			msgs.JSONMsgs = append(msgs.JSONMsgs, msg)
-		case "protobuf":
-			msgs.GoProtoMsgs = append(msgs.GoProtoMsgs, msg)
 		case "gogoprotobuf":
 			msgs.GoGoProtoMsgs = append(msgs.GoGoProtoMsgs, msg)
 		default:
@@ -89,7 +84,6 @@ func init() {
 
 type Msgs struct {
 	JSONMsgs      []*generator.Descriptor
-	GoProtoMsgs   []*generator.Descriptor
 	GoGoProtoMsgs []*generator.Descriptor
 }
 
@@ -101,16 +95,6 @@ func (t *{{ $message.Name }}) Scan(val interface{}) error {
 
 func (t *{{ $message.Name }}) Value() (driver.Value, error) {
 	return json.Marshal(t)
-}
-{{ end }}
-
-{{ range $message := .GoProtoMsgs }}
-func (t *{{ $message.Name }}) Scan(val interface{}) error {
-	return goproto.Unmarshal(val.([]byte), t)
-}
-
-func (t *{{ $message.Name }}) Value() (driver.Value, error) {
-	return goproto.Marshal(t)
 }
 {{ end }}
 
