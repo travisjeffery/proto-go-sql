@@ -7,7 +7,7 @@ import (
 func main() {
 	req := command.Read()
 	p := NewGenerator()
-	resp := command.GeneratePlugin(req, p, "_sqlscanner.go")
+	resp := command.GeneratePlugin(req, p, "_sql.go")
 	if !p.Write() {
 		return
 	}

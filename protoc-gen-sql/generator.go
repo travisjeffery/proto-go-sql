@@ -10,7 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	sqlscanner "github.com/travisjeffery/proto-sqlscanner/sqlscanner"
+	sql "github.com/travisjeffery/proto-go-sql/sql"
 )
 
 type Generator struct {
@@ -24,7 +24,7 @@ func NewGenerator() *Generator {
 }
 
 func (p *Generator) Name() string {
-	return "sqlscanner"
+	return "sql"
 }
 
 func (p *Generator) Write() bool {
@@ -50,7 +50,7 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 
 func (p *Generator) Generate(file *generator.FileDescriptor) {
 	p.write = false
-	t := template.Must(template.New("sqlscanner").Parse(tmpl))
+	t := template.Must(template.New("sql").Parse(tmpl))
 	var buf bytes.Buffer
 	t.Execute(&buf, p.msgs(file))
 	p.P(buf.String())
@@ -78,7 +78,7 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 		child.Name = &name
 
 		if !reflect.ValueOf(child.Options).IsNil() {
-			v, err := proto.GetExtension(child.Options, sqlscanner.E_Sqlscanner)
+			v, err := proto.GetExtension(child.Options, sql.E_Sql)
 			if err == nil {
 				ext := v.(*string)
 
