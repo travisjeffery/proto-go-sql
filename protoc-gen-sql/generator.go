@@ -16,6 +16,7 @@ import (
 type Generator struct {
 	*generator.Generator
 	generator.PluginImports
+	write bool
 }
 
 func NewGenerator() *Generator {
@@ -45,10 +46,15 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (p *Generator) Generate(file *generator.FileDescriptor) {
+	p.write = false
 	t := template.Must(template.New("sql").Parse(tmpl))
 	var buf bytes.Buffer
 	t.Execute(&buf, p.msgs(file))
 	p.P(buf.String())
+}
+
+func (p *Generator) Write() bool {
+	return p.write
 }
 
 func forEachMessage(parent *descriptor.DescriptorProto, children []*descriptor.DescriptorProto, f func(parent *descriptor.DescriptorProto, child *descriptor.DescriptorProto)) {
@@ -79,8 +85,10 @@ func (p *Generator) msgs(file *generator.FileDescriptor) Msgs {
 
 				switch *ext {
 				case "json":
+					p.write = true
 					msgs.JSON = append(msgs.JSON, child)
 				case "gogoprotobuf":
+					p.write = true
 					msgs.GoGoProto = append(msgs.GoGoProto, child)
 				default:
 					fmt.Fprintf(os.Stderr, "Unsupported marshal type: %s", *ext)
