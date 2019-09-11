@@ -30,10 +30,7 @@ Generating this person_sql.go:
 
 ``` go
 func (t *Person) Scan(val interface{}) error {
-	valRaw := val.([]byte)
-	valCopy := make([]byte, len(valRaw))
-	copy(valCopy, valRaw)
-	return json.Unmarshal(valCopy, t)
+	return json.Unmarshal(val.([]byte), t)
 }
 
 func (t *Person) Value() (driver.Value, error) {
@@ -43,10 +40,6 @@ func (t *Person) Value() (driver.Value, error) {
 ```
 
 And we're done!
-
-(The db driver owns the bytes passed into scan, that's why we make a copy so the bytes don't change
-as we're unmarshaling. [This
-issue](https://go-review.googlesource.com/c/go/+/108535/) explains it.)
 
 ## License
 

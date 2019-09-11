@@ -18,10 +18,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 func (t *Person) Scan(val interface{}) error {
-	valRaw := val.([]byte)
-	valCopy := make([]byte, len(valRaw))
-	copy(valCopy, valRaw)
-	return json.Unmarshal(valCopy, t)
+	return json.Unmarshal(val.([]byte), t)
 }
 
 func (t *Person) Value() (driver.Value, error) {

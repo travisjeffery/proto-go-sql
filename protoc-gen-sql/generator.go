@@ -112,10 +112,7 @@ type Msgs struct {
 var tmpl = `
 {{ range $message := .JSON }}
 func (t *{{ $message.Name }}) Scan(val interface{}) error {
-	valRaw := val.([]byte)
-	valCopy := make([]byte, len(valRaw))
-	copy(valCopy, valRaw)
-	return json.Unmarshal(valCopy, t)
+	return json.Unmarshal(val.([]byte), t)
 }
 
 func (t *{{ $message.Name }}) Value() (driver.Value, error) {
@@ -125,10 +122,7 @@ func (t *{{ $message.Name }}) Value() (driver.Value, error) {
 
 {{ range $message := .GoGoProto }}
 func (t *{{ $message.Name }}) Scan(val interface{}) error {
-	valRaw := val.([]byte)
-	valCopy := make([]byte, len(valRaw))
-	copy(valCopy, valRaw)
-	return gogoproto.Unmarshal(valCopy, t)
+	return gogoproto.Unmarshal(val.([]byte), t)
 }
 
 func (t *{{ $message.Name }}) Value() (driver.Value, error) {
