@@ -41,6 +41,15 @@ func (t *Person) Value() (driver.Value, error) {
 
 And we're done!
 
+## Development
+
+To compile the plugin and run test, use the following:
+
+```bash
+make compile
+make test
+```
+
 ## License
 
 MIT

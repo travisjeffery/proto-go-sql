@@ -42,7 +42,9 @@ func (p *Generator) GenerateImports(file *generator.FileDescriptor) {
 	if len(msgs.GoGoProto) > 0 {
 		p.PrintImport("gogoproto", "github.com/gogo/protobuf/proto")
 	}
-	p.PrintImport("driver", "database/sql/driver")
+	if len(msgs.JSON) > 0 || len(msgs.GoGoProto) > 0 {
+		p.PrintImport("driver", "database/sql/driver")
+	}
 }
 
 func (p *Generator) Generate(file *generator.FileDescriptor) {

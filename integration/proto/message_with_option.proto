@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package proto;
+
+import "sql.proto";
+
+message MessageWithOption {
+  option (sql.all) = "json";
+
+  string id = 1;
+}
